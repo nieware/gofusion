@@ -21,7 +21,7 @@ How do I compile and run it?
 You should be able to compile and run it if you are able to compile and run the examples from the go-qml package. See [here](https://github.com/go-qml/qml) for
 instructions on how to set up your system for doing that.
 
-Once the "gofusion" binary is compiled successfully, place the files "gofusion.qml" and "particle.png" into the same directory as the binary. The
+Once the "gofusion" binary is compiled successfully, place the files "gofusion.qml", "Button.qml" and "particle.png" into the same directory as the binary. The
 "model" subdirectory (and its content) should be a subdirectory of the directory where the binary is located.
 
 
@@ -39,5 +39,4 @@ Second, one could write a web service (and host it), so people could store their
 would be making it hack-proof and DOS-proof...
 
 Third, the application only supports keyboard input for now, mouse gestures (a.k.a. swiping) should also be supported for mobile devices.
-
 
