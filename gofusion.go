@@ -33,8 +33,12 @@ var randGen = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 // ### BOARD ###
 
+// Board contains all the tiles present on the board and methods to manipulate them.
+// Note that tiles is not a grid (two-dimensional array) holding the tiles, but a one-dimensional
+// array; the tiles themselves hold their position on the board. This allows us to have two tiles
+// at the same position (temporarily, before they are "fused").
 type Board struct {
-	tiles [16]*Tile
+	tiles [boardSize * boardSize]*Tile
 
 	width  int
 	height int
@@ -43,6 +47,7 @@ type Board struct {
 	moved bool
 }
 
+// freeSpaces counts the number of free spaces present on the board
 func (b *Board) freeSpaces(t *Tile) int {
 	cnt := 0
 	for _, t := range b.tiles {
@@ -114,6 +119,8 @@ func (b *Board) addTileAt(x, y, v int) bool {
 	return b.insertTile(t)
 }
 
+// createMergeTest creates a board with several pairs of tiles that can be merged
+// (and one pair of "11" tiles that cannot be merged)
 func (b *Board) createMergeTest() {
 	b.clear()
 
@@ -138,6 +145,8 @@ func (b *Board) createMergeTest() {
 	b.addTileAt(3, 3, 11)
 }
 
+// createGameOverTest creates a board which is guaranteed to lead to
+// "Game Over" after the next move
 func (b *Board) createGameOverTest() {
 	b.clear()
 
@@ -206,6 +215,9 @@ func (b *Board) gameOverCheck() (done bool, won bool) {
 	return
 }
 
+// getMoveTarget gets the new position for the given tile in the direction given by dx and dy.
+// If a tile that can merge with the current tile is in the way, the position of that tile is returned and otherTile
+// is set to that tile.
 func (b *Board) getMoveTarget(tile *Tile, dx, dy int) (x, y int, otherTile *Tile) {
 	x, y = tile.x, tile.y
 	curx, cury := x, y
@@ -227,6 +239,7 @@ func (b *Board) getMoveTarget(tile *Tile, dx, dy int) (x, y int, otherTile *Tile
 	return
 }
 
+// clear clears the board, removing all tiles
 func (b *Board) clear() {
 	for _, t := range b.tiles {
 		if t != nil {
@@ -237,6 +250,7 @@ func (b *Board) clear() {
 	}
 }
 
+// newGame clears the board and adds two random tiles
 func (b *Board) newGame() {
 	b.clear()
 
@@ -244,6 +258,9 @@ func (b *Board) newGame() {
 	board.addRandomTile(2)
 }
 
+// doMove executes a move given by dx and dy. enumStrategy specifies an enumeration strategy function
+// which returns the positions on the board in the order in which they should move (i.e., when moving down,
+// the bottom row is checked first, then the one above etc.)
 func (b *Board) doMove(dx, dy int, next enumStrategy) {
 	// get starting point
 	x, y, done := next(-1, -1)
@@ -268,6 +285,9 @@ func (b *Board) doMove(dx, dy int, next enumStrategy) {
 	}
 }
 
+// doMerge executes the "fusions" between the tiles which have been marked to merge by setting NextValue.
+// This is done by setting the new (higher) value for one tile in each pair and removing the other one.
+// doMerge also handles calculating and updating the score.
 func (b *Board) doMerge() {
 	for _, t := range b.tiles {
 		if t != nil && t.NextValue != 0 {
@@ -288,6 +308,7 @@ func (b *Board) doMerge() {
 	}
 }
 
+// setBounceAnim initiates the "bounce" animation sequence
 func (b *Board) setBounceAnim() {
 	for _, t := range board.tiles {
 		if t != nil {
@@ -296,6 +317,7 @@ func (b *Board) setBounceAnim() {
 	}
 }
 
+// setBounceAnim initiates the "fall" animation sequence
 func (b *Board) setFallAnim() {
 	for _, t := range board.tiles {
 		if t != nil {
@@ -306,6 +328,7 @@ func (b *Board) setFallAnim() {
 
 // ### CONTROL ###
 
+// Control handles the interface with QML
 type Control struct {
 	Root        qml.Object
 	Score       qml.Object
@@ -319,22 +342,18 @@ type Control struct {
 	settings *GlobalSettings
 }
 
+// showScore displays the score
 func (ctrl *Control) showScore() {
 	ctrl.Score.Set("text", "Score: "+strconv.Itoa(ctrl.score)+" Hi: "+strconv.Itoa(ctrl.hiscore))
 }
 
+// SetScore sets the score and displays it
 func (ctrl *Control) SetScore(v int) {
 	ctrl.score = v
 	ctrl.showScore()
 }
 
-func (ctrl *Control) SetRunning(v bool) {
-	ctrl.Running = v
-	if v {
-		ctrl.SetMessage("", "")
-	}
-}
-
+// SetScore sets the highscore, displays it and saves it
 func (ctrl *Control) SetHiScore(v int) {
 	ctrl.hiscore = v
 	ctrl.showScore()
@@ -343,11 +362,22 @@ func (ctrl *Control) SetHiScore(v int) {
 	}
 }
 
+// SetRunning sets the game state to "running" and clears the message overlayed over the board
+func (ctrl *Control) SetRunning(v bool) {
+	ctrl.Running = v
+	if v {
+		ctrl.SetMessage("", "")
+	}
+}
+
+// SetMessage sets the message overlayed over the board
 func (ctrl *Control) SetMessage(m1, m2 string) {
 	ctrl.Message.Set("text", m1)
 	ctrl.SubMessage.Set("text", m2)
 }
 
+// Emit shows a particle ("spark") animation at position x, y
+// higher level values increase the intensity of the effect
 func (ctrl *Control) Emit(x, y, level int) {
 	component := ctrl.Root.Object("emitterComponent")
 	for i := 0; i <= level*2; i++ {
@@ -364,10 +394,12 @@ func (ctrl *Control) Emit(x, y, level int) {
 	}
 }
 
+// Done handles the timeout event which ends the particle animation
 func (ctrl *Control) Done(emitter qml.Object) {
 	emitter.Destroy()
 }
 
+// HandleKey handles keyboard events
 func (ctrl *Control) HandleKey(key int) {
 	if !ctrl.Running {
 		ctrl.SetRunning(true)
@@ -386,6 +418,10 @@ func (ctrl *Control) HandleKey(key int) {
 	}
 }
 
+// HandleMoveAnimationDone is called at the end of the move animation which runs automatically when
+// the position of a tile is changed. It initiates the merging of the tiles which now overlap.
+// It then proceeds to the next move by adding a random tile to the board, checking for game over
+// and displaying appropriate messages in this case.
 func (ctrl *Control) HandleMoveAnimationDone() {
 	if ctrl.enableMerge {
 		board.doMerge()
@@ -415,12 +451,14 @@ func (ctrl *Control) HandleMoveAnimationDone() {
 	}
 }
 
+// HandleRestartButton handles a click of the restart button
 func (ctrl *Control) HandleRestartButton() {
 	board.newGame()
 	ctrl.SetScore(0)
 	ctrl.SetMessage("", "")
 }
 
+// createTile creates a new tile object of the given value at the given position
 func (ctrl *Control) createTile(value, x, y int) (t *Tile) {
 	t = &Tile{}
 
@@ -441,6 +479,7 @@ func (ctrl *Control) createTile(value, x, y int) (t *Tile) {
 
 // ### TILE ###
 
+// Tile represents one tile on the board, with an embedded qml.Object
 type Tile struct {
 	qml.Object
 
@@ -454,6 +493,7 @@ type Tile struct {
 	y int
 }
 
+// SetPos sets the position of the tile, automatically starting a QML animation
 func (t *Tile) SetPos(x, y int) {
 	t.Set("x", gridSize*x)
 	t.Set("y", gridSize*y+gridSize/2)
@@ -462,6 +502,7 @@ func (t *Tile) SetPos(x, y int) {
 	t.y = y
 }
 
+// SetBounce enables the "bounce" animation for this tile
 func (t *Tile) SetBounce(enabled bool) {
 	y0 := t.Int("y")
 	y1 := t.Int("y") - (12-t.Value())*5
@@ -476,6 +517,7 @@ func (t *Tile) SetBounce(enabled bool) {
 	}
 }
 
+// SetFall enables the "fall" animation for this tile
 func (t *Tile) SetFall(enabled bool) {
 	if enabled {
 		t.Set("fallEnable", true)
@@ -484,19 +526,27 @@ func (t *Tile) SetFall(enabled bool) {
 	}
 }
 
+// SetValue sets the value of the tile (only stored on the QML side).
+// The value displayed on the tile is 2^nvalue.
 func (t *Tile) SetValue(v int) {
 	t.Set("nvalue", v)
 }
 
+// Value gets the value of the tile (only stored on the QML side).
+// The value displayed on the tile is 2^nvalue.
 func (t *Tile) Value() int {
 	return t.Int("nvalue")
 }
 
+// SetRotation sets the rotation angle of the tile and updates its image
 func (t *Tile) SetRotation(rotation int) {
 	t.Rotation = rotation
 	t.Call("update")
 }
 
+// Paint repaints the tile using OpenGL functions.
+// Tiles currently have orthogonal projection, and each tile is rendered "on its own"
+// (i.e., it has its own OpenGL scene graph).
 func (t *Tile) Paint(p *qml.Painter) {
 	width := gl.Float(t.Int("width"))
 
@@ -638,6 +688,7 @@ func (t *Tile) Paint(p *qml.Painter) {
 }
 
 // ### INIT / RUN ###
+
 func run(filename string) error {
 	qml.Init(nil)
 	engine := qml.NewEngine()
@@ -687,6 +738,7 @@ func run(filename string) error {
 	return nil
 }
 
+// initTiles loads the 3D models for the tiles and registers the "Tile" type with QML
 func initTiles() error {
 	var err error
 	var models [12]map[string]*Object
@@ -728,6 +780,7 @@ func main() {
 
 // ### ENUM STRATEGIES ###
 
+// enumFromLeft is an enumStrategy enumerating fields from left to right
 func enumFromLeft(cx, cy int) (x, y int, done bool) {
 	if cx == -1 {
 		return 0, 0, false
@@ -740,6 +793,7 @@ func enumFromLeft(cx, cy int) (x, y int, done bool) {
 	return cx, cy, (cx >= boardSize)
 }
 
+// enumFromRight is an enumStrategy enumerating fields from right to left
 func enumFromRight(cx, cy int) (x, y int, done bool) {
 	if cx == -1 {
 		return boardSize - 1, 0, false
@@ -752,6 +806,7 @@ func enumFromRight(cx, cy int) (x, y int, done bool) {
 	return cx, cy, (cx < 0)
 }
 
+// enumFromTop is an enumStrategy enumerating fields from the top down
 func enumFromTop(cx, cy int) (x, y int, done bool) {
 	if cx == -1 {
 		return 0, 0, false
@@ -764,6 +819,7 @@ func enumFromTop(cx, cy int) (x, y int, done bool) {
 	return cx, cy, (cy >= boardSize)
 }
 
+// enumFromBottom is an enumStrategy enumerating fields from the bottom up
 func enumFromBottom(cx, cy int) (x, y int, done bool) {
 	if cx == -1 {
 		return 0, boardSize - 1, false
@@ -776,4 +832,8 @@ func enumFromBottom(cx, cy int) (x, y int, done bool) {
 	return cx, cy, (cy < 0)
 }
 
-type enumStrategy func(int, int) (int, int, bool)
+// enumStrategy is a function that specifies the order of enumeration of fields on the board.
+// When called with -1, -1, it should return the initial position of the enumeration.
+// When called with a position (x, y), it should return the next position.
+// "done" should be true when all positions have been enumerated.
+type enumStrategy func( /*cx*/ int /*cy*/, int) ( /*x*/ int /*y*/, int /*done*/, bool)

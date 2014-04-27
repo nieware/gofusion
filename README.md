@@ -1,11 +1,16 @@
-# Go-QML port of "2048"
+# GoFusion - a Go-QML port of "2048"
 
+![GoFusion Screenshot](https://raw.githubusercontent.com/nieware/gofusion/master/_data/screenshot.gif "GoFusion Screenshot")
 
 What is this?
 -------------
 
 This is yet another clone of that annoyingly addictive sliding tile game [2048](http://gabrielecirulli.github.io/2048/)
 by Gabriele Cirulli (which in turn is a clone of another game, which is a near clone of yet another one...), using Go and go-qml.
+
+This was my entry for the Go QML contest held at [GopherCon 2014](http://blog.labix.org/2014/03/13/go-qml-contest), and, much to my surprise, it [actually won](http://blog.labix.org/2014/04/25/qml-contest-results)! With this motivation boost, I'll continue work on the project, first by documenting the code and cleaning it up a bit, then I'll start implementing the ideas described below.
+
+For historic reference, this is a link to the project as it looked like when I submitted it for the contest: [https://github.com/nieware/gofusion/tree/6a636c37989464275dd758e66c29256af6cffe8a](https://github.com/nieware/gofusion/tree/6a636c37989464275dd758e66c29256af6cffe8a)
 
 
 What can I do with it?
