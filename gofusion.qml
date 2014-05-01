@@ -32,7 +32,7 @@ Rectangle {
         }
 
         Button {
-            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: 15; verticalCenter: parent.verticalCenter }
             text: "Restart"
             onClicked: ctrl.handleRestartButton()
         }
@@ -41,7 +41,7 @@ Rectangle {
             id: score
             objectName: "score"
             color: "white"
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            anchors { right: parent.right; rightMargin: 15; verticalCenter: parent.verticalCenter }
             text: "Score: 0"
         }
     }   
@@ -125,7 +125,8 @@ Rectangle {
             property real bounceY0: 0
             property real bounceY1: 0
             property bool bounceEnable: false    
-            property real bounceDuration: 700
+            property real bounceDuration: 400
+            property real pauseDuration: 2000
 
             property bool fallEnable: false    
             property real fallDuration: 2000
@@ -138,7 +139,8 @@ Rectangle {
                         if (!running) {
                             ctrl.handleMoveAnimationDone();
                         }
-                    } }
+                    } 
+                }
             }
             Behavior on y  {
                 NumberAnimation  { duration: 500; easing.type: Easing.OutBounce }
@@ -154,12 +156,18 @@ Rectangle {
                 running: bounceEnable
                 loops: Animation.Infinite
                 NumberAnimation {to: bounceY1; duration: bounceDuration; easing.type: "OutQuad"}
-                NumberAnimation {to: bounceY0; duration: bounceDuration; easing.type: "InQuad"}
+                NumberAnimation {to: bounceY0; duration: bounceDuration; easing.type: "OutBounce"}
+                NumberAnimation {to: bounceY0; duration: pauseDuration }
             }
 
             NumberAnimation on y {
                 running: fallEnable
                 to: 2000; duration: fallDuration; easing.type: "OutQuad"
+                onRunningChanged: {
+                    if (!running) {
+                        ctrl.handleFallAnimationDone();
+                    }
+                }
             }
     	}
 	}

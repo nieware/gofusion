@@ -317,15 +317,6 @@ func (b *Board) setBounceAnim() {
 	}
 }
 
-// setBounceAnim initiates the "fall" animation sequence
-func (b *Board) setFallAnim() {
-	for _, t := range board.tiles {
-		if t != nil {
-			t.SetFall(true)
-		}
-	}
-}
-
 // ### CONTROL ###
 
 // Control handles the interface with QML
@@ -337,6 +328,7 @@ type Control struct {
 	score       int
 	hiscore     int
 	enableMerge bool
+	fallIndex   int
 
 	Running  bool
 	settings *GlobalSettings
@@ -437,7 +429,8 @@ func (ctrl *Control) HandleMoveAnimationDone() {
 				board.setBounceAnim()
 			} else {
 				ctrl.SetMessage("Game Over!", "click 'Restart'")
-				board.setFallAnim()
+				ctrl.fallIndex = 0
+				board.tiles[ctrl.fallIndex].SetFall(true)
 			}
 		}
 		if won {
@@ -448,6 +441,15 @@ func (ctrl *Control) HandleMoveAnimationDone() {
 			board.setBounceAnim()
 		}
 		board.moved = false
+	}
+}
+
+// HandleFallAnimationDone is called after one stone has finished falling, so we can let
+// the next one fall.
+func (ctrl *Control) HandleFallAnimationDone() {
+	ctrl.fallIndex++
+	if ctrl.fallIndex < boardSize*boardSize {
+		board.tiles[ctrl.fallIndex].SetFall(true)
 	}
 }
 
@@ -504,13 +506,14 @@ func (t *Tile) SetPos(x, y int) {
 
 // SetBounce enables the "bounce" animation for this tile
 func (t *Tile) SetBounce(enabled bool) {
-	y0 := t.Int("y")
-	y1 := t.Int("y") - (12-t.Value())*5
+	y0 := gridSize * t.y
+	y1 := y0 - (12-t.Value())*8
 	//fmt.Println(t.Value(), y0, y1)
 	if enabled {
 		t.Set("bounceY0", y0)
 		t.Set("bounceY1", y1)
-		t.Set("bounceDuration", (12-t.Value())*70)
+		t.Set("bounceDuration", (12-t.Value())*30)
+		t.Set("pauseDuration", randGen.Intn(2000)+1)
 		t.Set("bounceEnable", true)
 	} else {
 		t.Set("bounceEnable", false)
@@ -729,8 +732,10 @@ func run(filename string) error {
 
 	board = Board{width: boardSize, height: boardSize}
 
-	board.newGame()
-	//board.createGameOverTest()
+	//board.newGame()
+	board.createGameOverTest()
+	ctrl.fallIndex = 0
+	board.tiles[ctrl.fallIndex].SetFall(true)
 
 	win.Show()
 	win.Wait()
@@ -836,4 +841,4 @@ func enumFromBottom(cx, cy int) (x, y int, done bool) {
 // When called with -1, -1, it should return the initial position of the enumeration.
 // When called with a position (x, y), it should return the next position.
 // "done" should be true when all positions have been enumerated.
-type enumStrategy func( /*cx*/ int /*cy*/, int) ( /*x*/ int /*y*/, int /*done*/, bool)
+type enumStrategy func(cx, cy int) (x, y int, done bool)
