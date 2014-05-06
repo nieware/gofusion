@@ -395,6 +395,9 @@ func (ctrl *Control) Done(emitter qml.Object) {
 
 // HandleKey handles keyboard events
 func (ctrl *Control) HandleKey(key int) {
+	if !ctrl.Running {
+		ctrl.SetRunning(true)
+	}
 	switch key {
 	case 16777234:
 		board.doMove(-1, 0, enumFromLeft)
