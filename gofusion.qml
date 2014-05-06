@@ -10,6 +10,16 @@ Rectangle {
 	color: "navy"
 	focus: true
 
+    MouseArea {
+        anchors.fill: parent
+
+        preventStealing: true
+        acceptedButtons: Qt.LeftButton
+
+        onPressed: ctrl.handleMouseDown(mouse.x, mouse.y)
+        onReleased: ctrl.handleMouseUp(mouse.x, mouse.y)                
+    }
+
     gradient: Gradient {
         GradientStop { position: 0.0; color: "#001166"; }
         //GradientStop { position: 0.8; color: "#875864"; }
@@ -60,59 +70,52 @@ Rectangle {
             width: parent.width //- (parent.width % blockSize)
             height: parent.height //- (parent.height % blockSize)
             anchors.centerIn: parent
-
-            MouseArea {
-                z: 100
-                anchors.fill: parent
-                onClicked: game.handleClick(mouse.x, mouse.y)
-                
-                Text {
-                    id: message
-                    objectName: "message"
-                    font.pointSize: 24
-                    color: "white"
-                    y: 300 // verticalCenter doesn't work?!
-                    z: 100
-                    //verticalAlignment: Text.AlignVCenter
-                    anchors {
-                        //verticalCenter: parent.verticalCenter
-                        horizontalCenter: parent.horizontalCenter
-                    }
-                    text: "GoFusion"
-                }
-
-                Text {
-                    id: submessage
-                    objectName: "submessage"
-                    font.pointSize: 14
-                    color: "white"
-                    y: 350 // verticalCenter doesn't work?!
-                    z: 100
-                    //verticalAlignment: Text.AlignVCenter
-                    anchors {
-                        //verticalCenter: parent.verticalCenter
-                        horizontalCenter: parent.horizontalCenter
-                    }
-                    text: "a '2048' clone by nieware"
-                }
-
-                Glow {
-                    anchors.fill: message
-                    radius: 8
-                    samples: 16
-                    color: "white"
-                    source: message
-                }
-
-                Glow {
-                    anchors.fill: submessage
-                    radius: 4
-                    samples: 16
-                    color: "white"
-                    source: submessage
-                }
-            }
         }
+
+        Text {
+            id: message
+            objectName: "message"
+            font.pointSize: 24
+            color: "white"
+            y: 300 // verticalCenter doesn't work?!
+            z: 100
+            //verticalAlignment: Text.AlignVCenter
+            anchors {
+                //verticalCenter: parent.verticalCenter
+                horizontalCenter: parent.horizontalCenter
+            }
+            text: "GoFusion"
+        }
+        Glow {
+            anchors.fill: message
+            radius: 8
+            samples: 16
+            color: "white"
+            source: message
+        }
+
+
+        Text {
+            id: submessage
+            objectName: "submessage"
+            font.pointSize: 14
+            color: "white"
+            y: 350 // verticalCenter doesn't work?!
+            z: 100
+            //verticalAlignment: Text.AlignVCenter
+            anchors {
+                //verticalCenter: parent.verticalCenter
+                horizontalCenter: parent.horizontalCenter
+            }
+            text: "a '2048' clone by nieware"
+        }
+        Glow {
+            anchors.fill: submessage
+            radius: 4
+            samples: 16
+            color: "white"
+            source: submessage
+        }        
     }
 
 	property var tileComponent: Component {

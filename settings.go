@@ -40,7 +40,7 @@ func (g *GlobalSettings) getFileName() string {
 
 // read settings from file
 func (g *GlobalSettings) readFromFile() {
-	fmt.Println(g.fileName)
+	//fmt.Println(g.fileName)
 	n, err := ioutil.ReadFile(g.fileName)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -56,7 +56,7 @@ func (g *GlobalSettings) readFromFile() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("read settings from file: %v\n", g)
+	//fmt.Printf("read settings from file: %v\n", g)
 }
 
 // write settings to file

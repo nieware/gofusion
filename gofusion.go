@@ -329,6 +329,8 @@ type Control struct {
 	hiscore     int
 	enableMerge bool
 	fallIndex   int
+	mouseDownX  int
+	mouseDownY  int
 
 	Running  bool
 	settings *GlobalSettings
@@ -393,9 +395,6 @@ func (ctrl *Control) Done(emitter qml.Object) {
 
 // HandleKey handles keyboard events
 func (ctrl *Control) HandleKey(key int) {
-	if !ctrl.Running {
-		ctrl.SetRunning(true)
-	}
 	switch key {
 	case 16777234:
 		board.doMove(-1, 0, enumFromLeft)
@@ -407,6 +406,42 @@ func (ctrl *Control) HandleKey(key int) {
 		board.doMove(0, 1, enumFromBottom)
 		/*default:
 		fmt.Println(key)*/
+	}
+}
+
+func (ctrl *Control) HandleMouseDown(xPos, yPos int) {
+	if !ctrl.Running {
+		ctrl.SetRunning(true)
+	}
+	ctrl.mouseDownX, ctrl.mouseDownY = xPos, yPos
+}
+
+func intAbs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func (ctrl *Control) HandleMouseUp(xPos, yPos int) {
+	dx := ctrl.mouseDownX - xPos
+	dy := ctrl.mouseDownY - yPos
+
+	if intAbs(dx) > 30 && intAbs(dy) < intAbs(dx)/2 {
+		// horizontal swipe
+		if dx > 0 {
+			board.doMove(-1, 0, enumFromLeft)
+		} else {
+			board.doMove(1, 0, enumFromRight)
+		}
+	}
+	if intAbs(dy) > 30 && intAbs(dx) < intAbs(dy)/2 {
+		// vertical swipe
+		if dy > 0 {
+			board.doMove(0, -1, enumFromTop)
+		} else {
+			board.doMove(0, 1, enumFromBottom)
+		}
 	}
 }
 
@@ -732,10 +767,10 @@ func run(filename string) error {
 
 	board = Board{width: boardSize, height: boardSize}
 
-	//board.newGame()
-	board.createGameOverTest()
+	board.newGame()
+	/*board.createGameOverTest()
 	ctrl.fallIndex = 0
-	board.tiles[ctrl.fallIndex].SetFall(true)
+	board.tiles[ctrl.fallIndex].SetFall(true)*/
 
 	win.Show()
 	win.Wait()

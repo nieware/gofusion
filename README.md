@@ -16,7 +16,7 @@ For historic reference, this is a link to the project as it looked like when I s
 What can I do with it?
 ----------------------
 
-Basically, you can do almost everything you can with the original - play the game using the keyboard (in a hopefully pleasant-looking way) and keep 
+Basically, you can do everything you can with the original - play the game using the mouse or keyboard (in a hopefully pleasant-looking way) and keep 
 a local highscore.
 
 
@@ -42,6 +42,4 @@ colors of the tiles by changing the lighting color) and has orthogonal projectio
 
 Second, one could write a web service (and host it), so people could store their highscores online. That part is trivial. The non-trivial part
 would be making it hack-proof and DOS-proof...
-
-Third, the application only supports keyboard input for now, mouse gestures (a.k.a. swiping) should also be supported for mobile devices.
 
