@@ -146,7 +146,13 @@ Rectangle {
                 }
             }
             Behavior on y  {
-                NumberAnimation  { duration: 500; easing.type: Easing.OutBounce }
+                NumberAnimation  { duration: 500; easing.type: Easing.OutBounce; 
+                    onRunningChanged: {
+                        if (!running) {
+                            ctrl.handleMoveAnimationDone();
+                        }
+                    } 
+                }
             }
             Behavior on width  {
                 NumberAnimation  { duration: 500; easing.type: Easing.OutBounce }
